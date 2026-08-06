@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Admin Login{% endblock %}
+
+{% block content %}
+<div class="card auth-card">
+    <h3 class="text-center mb-4">Admin Login</h3>
+
+    <form method="POST" action="{{ url_for('auth.admin_login') }}">
+        <div class="mb-3">
+            <label class="form-label">Email address</label>
+            <input type="email" name="email" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-dark w-100">Login</button>
+    </form>
+
+    <p class="text-center mt-3 text-muted">
+        <small>Admin accounts are created directly in the database (see <code>create_admin.py</code>).</small>
+    </p>
+</div>
+{% endblock %}

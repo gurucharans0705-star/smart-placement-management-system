@@ -1,0 +1,30 @@
+/* ============================================================
+   style.css
+   Custom styles layered on top of Bootstrap.
+   ============================================================ */
+
+body {
+    background-color: #f4f6f9;
+}
+
+.navbar-brand {
+    letter-spacing: 0.5px;
+}
+
+/* Card style used across dashboards (students, companies, etc.) */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Auth forms (login/register) container */
+.auth-card {
+    max-width: 450px;
+    margin: 3rem auto;
+    padding: 2rem;
+}
+
+footer {
+    color: #6c757d;
+}

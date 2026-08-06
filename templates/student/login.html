@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Student Login{% endblock %}
+
+{% block content %}
+<div class="card auth-card">
+    <h3 class="text-center mb-4">Student Login</h3>
+
+    <form method="POST" action="{{ url_for('auth.student_login') }}">
+        <div class="mb-3">
+            <label class="form-label">Email address</label>
+            <input type="email" name="email" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Login</button>
+    </form>
+
+    <p class="text-center mt-3">
+        New here? <a href="{{ url_for('auth.student_register') }}">Register now</a>
+    </p>
+</div>
+{% endblock %}

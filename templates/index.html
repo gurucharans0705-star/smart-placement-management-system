@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Home | Smart Placement System{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="display-5 fw-bold">Welcome to the Smart Placement Management System</h1>
+    <p class="lead text-muted">Connecting students with the right companies, the smart way.</p>
+
+    <div class="mt-4">
+        <a href="{{ url_for('auth.student_register') }}" class="btn btn-primary btn-lg mx-2">Student Register</a>
+        <a href="{{ url_for('auth.student_login') }}" class="btn btn-outline-primary btn-lg mx-2">Student Login</a>
+        <a href="{{ url_for('auth.admin_login') }}" class="btn btn-outline-dark btn-lg mx-2">Admin Login</a>
+    </div>
+</div>
+{% endblock %}
