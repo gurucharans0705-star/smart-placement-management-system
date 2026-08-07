@@ -31,6 +31,11 @@
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a></li>
                     {% elif session.get('admin_id') %}
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.companies') }}">Companies</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.drives') }}">Placement Drives</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.applications') }}">Applications</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.students') }}">Students</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.notifications') }}">Notifications</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a></li>
                     {% else %}
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.student_login') }}">Student Login</a></li>

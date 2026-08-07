@@ -2,9 +2,131 @@
 {% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-<h2>Welcome, {{ name }} 👋</h2>
-<div class="alert alert-info mt-3">
-    This is a placeholder dashboard. Full features (company management,
-    applicant lists, status updates) will be built in the next steps.
+<h2 class="mb-4">Welcome, {{ name }} 👋</h2>
+
+<!-- ================= SUMMARY CARDS ================= -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card p-3 text-center h-100">
+            <div class="fs-3 fw-bold text-primary">{{ stats.total_students }}</div>
+            <small class="text-muted">Total Students</small>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card p-3 text-center h-100">
+            <div class="fs-3 fw-bold text-info">{{ stats.total_companies }}</div>
+            <small class="text-muted">Total Companies</small>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card p-3 text-center h-100">
+            <div class="fs-3 fw-bold text-success">{{ stats.active_companies }}</div>
+            <small class="text-muted">Active Companies</small>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card p-3 text-center h-100">
+            <div class="fs-3 fw-bold text-warning">{{ stats.total_applications }}</div>
+            <small class="text-muted">Total Applications</small>
+        </div>
+    </div>
+</div>
+
+<!-- ================= RECENT ACTIVITIES ================= -->
+<h4 class="mb-3">Recent Activities</h4>
+
+<div class="row g-4">
+
+    <!-- Latest Registered Students -->
+    <div class="col-lg-4">
+        <div class="card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">Latest Registered Students</h6>
+                <a href="{{ url_for('admin.students') }}" class="small">View all</a>
+            </div>
+            {% if recent_students %}
+                <ul class="list-group list-group-flush">
+                    {% for s in recent_students %}
+                        <li class="list-group-item px-0">
+                            <div class="fw-semibold">{{ s.full_name }}</div>
+                            <small class="text-muted d-block">{{ s.department }} &middot; CGPA {{ s.cgpa }}</small>
+                            <small class="text-muted">{{ s.created_at }}</small>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted mb-0">No students registered yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recently Added Companies -->
+    <div class="col-lg-4">
+        <div class="card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">Recently Added Companies</h6>
+                <a href="{{ url_for('admin.companies') }}" class="small">View all</a>
+            </div>
+            {% if recent_companies %}
+                <ul class="list-group list-group-flush">
+                    {% for c in recent_companies %}
+                        <li class="list-group-item px-0">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-semibold">{{ c.company_name }}</span>
+                                {% if c.is_active %}
+                                    <span class="badge bg-success align-self-start">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary align-self-start">Inactive</span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted d-block">{{ c.job_role }} &middot; {{ c.package_lpa }} LPA</small>
+                            <small class="text-muted">{{ c.created_at }}</small>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted mb-0">No companies added yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Latest Applications -->
+    <div class="col-lg-4">
+        <div class="card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">Latest Applications</h6>
+                <a href="{{ url_for('admin.applications') }}" class="small">View all</a>
+            </div>
+            {% if recent_applications %}
+                <ul class="list-group list-group-flush">
+                    {% for a in recent_applications %}
+                        <li class="list-group-item px-0">
+                            <div class="fw-semibold">{{ a.student_name }}</div>
+                            <small class="text-muted d-block">
+                                applied to {{ a.company_name }} ({{ a.job_role }})
+                            </small>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <small class="text-muted">{{ a.applied_at }}</small>
+                                {% if a.status == 'Applied' %}
+                                    <span class="badge bg-primary">Applied</span>
+                                {% elif a.status == 'Shortlisted' %}
+                                    <span class="badge bg-info text-dark">Shortlisted</span>
+                                {% elif a.status == 'Interview Scheduled' %}
+                                    <span class="badge bg-warning text-dark">Interview</span>
+                                {% elif a.status == 'Selected' %}
+                                    <span class="badge bg-success">Selected</span>
+                                {% elif a.status == 'Rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted mb-0">No applications submitted yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
 </div>
 {% endblock %}
