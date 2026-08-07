@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Eligible Companies{% endblock %}
+
+{% block content %}
+<h3 class="mb-4">Companies You're Eligible For</h3>
+
+{% if companies %}
+<div class="row g-4">
+    {% for c in companies %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card p-3 h-100 d-flex flex-column">
+            <h5>{{ c.company_name }}</h5>
+            <p class="text-muted mb-1">{{ c.job_role }}</p>
+            <ul class="list-unstyled small mb-3">
+                <li><strong>CTC:</strong> {{ c.package_lpa }} LPA</li>
+                <li><strong>Location:</strong> {{ c.location or "Not specified" }}</li>
+                <li><strong>Min CGPA:</strong> {{ c.min_cgpa }}</li>
+                <li><strong>Last Date to Apply:</strong> {{ c.last_date or "Not specified" }}</li>
+            </ul>
+
+            <div class="mt-auto">
+                {% if c.company_id in applied_ids %}
+                    <button class="btn btn-secondary w-100" disabled>Already Applied</button>
+                {% else %}
+                    <form method="POST" action="{{ url_for('student.apply', company_id=c.company_id) }}">
+                        <button type="submit" class="btn btn-primary w-100">Apply Now</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    You are not currently eligible for any active companies. Keep your profile updated -
+    eligibility is based on your CGPA, department, backlogs, and passing year.
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<h3 class="mb-4">Notifications</h3>
+
+{% if notifications %}
+<div class="list-group">
+    {% for note in notifications %}
+        <div class="list-group-item">
+            <div class="d-flex justify-content-between">
+                <span>{{ note.message }}</span>
+                {% if not note.is_read %}
+                    <span class="badge bg-primary align-self-start">New</span>
+                {% endif %}
+            </div>
+            <small class="text-muted">{{ note.created_at }}</small>
+        </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">You have no notifications yet.</div>
+{% endif %}
+{% endblock %}

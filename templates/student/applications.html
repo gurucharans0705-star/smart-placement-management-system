@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}My Applications{% endblock %}
+
+{% block content %}
+<h3 class="mb-4">My Application History</h3>
+
+{% if applications %}
+<div class="table-responsive">
+    <table class="table table-bordered align-middle bg-white">
+        <thead class="table-light">
+            <tr>
+                <th>Company</th>
+                <th>Job Role</th>
+                <th>CTC</th>
+                <th>Location</th>
+                <th>Applied On</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td>{{ app.company_name }}</td>
+                <td>{{ app.job_role }}</td>
+                <td>{{ app.package_lpa }} LPA</td>
+                <td>{{ app.location or "-" }}</td>
+                <td>{{ app.applied_at }}</td>
+                <td>
+                    {% if app.status == 'Applied' %}
+                        <span class="badge bg-primary">Applied</span>
+                    {% elif app.status == 'Shortlisted' %}
+                        <span class="badge bg-info text-dark">Shortlisted</span>
+                    {% elif app.status == 'Interview Scheduled' %}
+                        <span class="badge bg-warning text-dark">Interview Scheduled</span>
+                    {% elif app.status == 'Selected' %}
+                        <span class="badge bg-success">Selected</span>
+                    {% elif app.status == 'Rejected' %}
+                        <span class="badge bg-danger">Rejected</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">You haven't applied to any companies yet.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Placement Drives{% endblock %}
+
+{% block content %}
+<h3 class="mb-4">All Active Placement Drives</h3>
+
+{% if drives %}
+<div class="table-responsive">
+    <table class="table table-bordered align-middle bg-white">
+        <thead class="table-light">
+            <tr>
+                <th>Company</th>
+                <th>Job Role</th>
+                <th>CTC</th>
+                <th>Location</th>
+                <th>Last Date</th>
+                <th>Eligibility</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in drives %}
+            <tr>
+                <td>{{ d.company_name }}</td>
+                <td>{{ d.job_role }}</td>
+                <td>{{ d.package_lpa }} LPA</td>
+                <td>{{ d.location or "-" }}</td>
+                <td>{{ d.last_date or "-" }}</td>
+                <td>
+                    <small>
+                        Min CGPA: {{ d.min_cgpa }}<br>
+                        Depts: {{ d.allowed_departments }}<br>
+                        Max Backlogs: {{ d.max_backlogs }}
+                    </small>
+                </td>
+                <td>
+                    {% if d.has_applied %}
+                        <span class="badge bg-secondary">{{ d.application_status }}</span>
+                    {% elif d.is_eligible %}
+                        <form method="POST" action="{{ url_for('student.apply', company_id=d.company_id) }}">
+                            <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+                        </form>
+                    {% else %}
+                        <span class="badge bg-danger">Not Eligible</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">There are no active placement drives right now. Check back later.</div>
+{% endif %}
+{% endblock %}

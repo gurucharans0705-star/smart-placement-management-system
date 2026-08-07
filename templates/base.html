@@ -24,6 +24,10 @@
                 <ul class="navbar-nav ms-auto">
                     {% if session.get('student_id') %}
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('student.dashboard') }}">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('student.companies') }}">Eligible Companies</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('student.drives') }}">Placement Drives</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('student.applications') }}">My Applications</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('student.notifications') }}">Notifications</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a></li>
                     {% elif session.get('admin_id') %}
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>

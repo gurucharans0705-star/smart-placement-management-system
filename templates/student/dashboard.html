@@ -2,10 +2,136 @@
 {% block title %}Student Dashboard{% endblock %}
 
 {% block content %}
-<h2>Welcome, {{ name }} 👋</h2>
-<div class="alert alert-info mt-3">
-    This is a placeholder dashboard. Full features (eligible companies,
-    apply, resume upload, application tracking, notifications) will be
-    built in the next steps.
+<h2 class="mb-4">Welcome, {{ student.full_name }} 👋</h2>
+
+<div class="row g-4">
+
+    <!-- ================= PROFILE CARD ================= -->
+    <div class="col-lg-5">
+        <div class="card p-4 h-100">
+            <h5 class="mb-3">Profile Details</h5>
+            <table class="table table-borderless mb-0">
+                <tr>
+                    <th style="width: 40%;">Name</th>
+                    <td>{{ student.full_name }}</td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td>{{ student.email }}</td>
+                </tr>
+                <tr>
+                    <th>Department</th>
+                    <td>{{ student.department }}</td>
+                </tr>
+                <tr>
+                    <th>Passing Year</th>
+                    <td>{{ student.passing_year if student.passing_year else "Not set" }}</td>
+                </tr>
+                <tr>
+                    <th>CGPA</th>
+                    <td>{{ student.cgpa }}</td>
+                </tr>
+                <tr>
+                    <th>Backlogs</th>
+                    <td>{{ student.backlogs }}</td>
+                </tr>
+                <tr>
+                    <th>Resume</th>
+                    <td>
+                        {% if student.resume_path %}
+                            <a href="{{ url_for('static', filename=student.resume_path) }}" target="_blank">
+                                View Uploaded Resume
+                            </a>
+                        {% else %}
+                            <span class="text-muted">Not uploaded yet</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+
+            <!-- Profile Completion -->
+            <div class="mt-3">
+                <div class="d-flex justify-content-between">
+                    <small class="fw-semibold">Profile Completion</small>
+                    <small class="fw-semibold">{{ profile_completion }}%</small>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-success" role="progressbar"
+                         style="width: {{ profile_completion }}%;"
+                         aria-valuenow="{{ profile_completion }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+
+            <!-- Resume Upload Form -->
+            <hr>
+            <h6>Upload / Replace Resume (PDF only)</h6>
+            <form method="POST" action="{{ url_for('student.upload_resume') }}" enctype="multipart/form-data" class="d-flex gap-2">
+                <input type="file" name="resume" accept=".pdf" class="form-control" required>
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= STATS + NOTIFICATIONS ================= -->
+    <div class="col-lg-7">
+        <!-- Stat Cards -->
+        <div class="row g-3 mb-3">
+            <div class="col-sm-6 col-xl-3">
+                <div class="card p-3 text-center h-100">
+                    <div class="fs-3 fw-bold text-primary">{{ stats.eligible }}</div>
+                    <small class="text-muted">Eligible Companies</small>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card p-3 text-center h-100">
+                    <div class="fs-3 fw-bold text-info">{{ stats.applied }}</div>
+                    <small class="text-muted">Applied</small>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card p-3 text-center h-100">
+                    <div class="fs-3 fw-bold text-warning">{{ stats.shortlisted }}</div>
+                    <small class="text-muted">Shortlisted</small>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card p-3 text-center h-100">
+                    <div class="fs-3 fw-bold text-success">{{ stats.selected }}</div>
+                    <small class="text-muted">Selected</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="card p-3 mb-3">
+            <h6 class="mb-2">Quick Links</h6>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('student.companies') }}" class="btn btn-outline-primary btn-sm">Eligible Companies</a>
+                <a href="{{ url_for('student.drives') }}" class="btn btn-outline-primary btn-sm">Placement Drives</a>
+                <a href="{{ url_for('student.applications') }}" class="btn btn-outline-primary btn-sm">My Applications</a>
+                <a href="{{ url_for('student.notifications') }}" class="btn btn-outline-primary btn-sm">Notifications</a>
+            </div>
+        </div>
+
+        <!-- Recent Notifications Preview -->
+        <div class="card p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">Recent Notifications</h6>
+                <a href="{{ url_for('student.notifications') }}" class="small">View all</a>
+            </div>
+            {% if recent_notifications %}
+                <ul class="list-group list-group-flush">
+                    {% for note in recent_notifications %}
+                        <li class="list-group-item px-0">
+                            <div>{{ note.message }}</div>
+                            <small class="text-muted">{{ note.created_at }}</small>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted mb-0">No notifications yet.</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}
