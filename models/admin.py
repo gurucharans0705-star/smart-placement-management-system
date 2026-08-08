@@ -123,3 +123,194 @@ def get_recent_applications(limit=5):
     cursor.close()
     conn.close()
     return applications
+
+
+# ------------------------------------------------------------
+# COMPANY MANAGEMENT (Step 7)
+# All queries for Add / View / Edit / Delete / Toggle Status.
+# ------------------------------------------------------------
+
+def get_companies_paginated(search="", page=1, per_page=10):
+    """
+    Return (companies, total_count) for the company list page.
+    - search: matches against company_name or job_role (case-insensitive)
+    - page/per_page: standard offset-based pagination
+    """
+    conn = get_db_connection()
+    if conn is None:
+        return [], 0
+
+    cursor = conn.cursor(dictionary=True)
+
+    where_clause = ""
+    params = []
+    if search:
+        where_clause = "WHERE company_name LIKE %s OR job_role LIKE %s"
+        like_term = f"%{search}%"
+        params = [like_term, like_term]
+
+    # Total count (for pagination controls)
+    cursor.execute(f"SELECT COUNT(*) AS cnt FROM companies {where_clause}", params)
+    total_count = cursor.fetchone()["cnt"]
+
+    # Page of results
+    offset = (page - 1) * per_page
+    query = f"""
+        SELECT * FROM companies
+        {where_clause}
+        ORDER BY created_at DESC
+        LIMIT %s OFFSET %s
+    """
+    cursor.execute(query, params + [per_page, offset])
+    companies = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return companies, total_count
+
+
+def get_company_by_id(company_id):
+    """Fetch a single company's full details (used by the Edit form)."""
+    conn = get_db_connection()
+    if conn is None:
+        return None
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM companies WHERE company_id = %s", (company_id,))
+    company = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return company
+
+
+def create_company(data):
+    """
+    Insert a new company row.
+    `data` is a dict of already-validated, cleaned values
+    (validation happens in routes/admin.py).
+    Returns (success: bool, message: str).
+    """
+    conn = get_db_connection()
+    if conn is None:
+        return False, "Database connection failed."
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO companies
+                (company_name, job_role, package_lpa, location, min_cgpa,
+                 allowed_departments, eligible_batch_years, max_backlogs,
+                 is_active, description, last_date)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                data["company_name"], data["job_role"], data["package_lpa"],
+                data["location"], data["min_cgpa"], data["allowed_departments"],
+                data["eligible_batch_years"], data["max_backlogs"],
+                data["is_active"], data["description"], data["last_date"],
+            )
+        )
+        conn.commit()
+        return True, "Company added successfully!"
+    except Exception as e:
+        conn.rollback()
+        print(f"[DB ERROR] create_company: {e}")
+        return False, "Failed to add company. Please check the details and try again."
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def update_company(company_id, data):
+    """
+    Update every field of an existing company.
+    Returns (success: bool, message: str).
+    """
+    conn = get_db_connection()
+    if conn is None:
+        return False, "Database connection failed."
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            UPDATE companies
+            SET company_name = %s, job_role = %s, package_lpa = %s, location = %s,
+                min_cgpa = %s, allowed_departments = %s, eligible_batch_years = %s,
+                max_backlogs = %s, is_active = %s, description = %s, last_date = %s
+            WHERE company_id = %s
+            """,
+            (
+                data["company_name"], data["job_role"], data["package_lpa"],
+                data["location"], data["min_cgpa"], data["allowed_departments"],
+                data["eligible_batch_years"], data["max_backlogs"],
+                data["is_active"], data["description"], data["last_date"],
+                company_id,
+            )
+        )
+        conn.commit()
+        return True, "Company updated successfully!"
+    except Exception as e:
+        conn.rollback()
+        print(f"[DB ERROR] update_company: {e}")
+        return False, "Failed to update company. Please check the details and try again."
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def delete_company(company_id):
+    """
+    Delete a company. Applications referencing it are removed too
+    (applications.company_id has ON DELETE CASCADE in schema.sql).
+    Returns (success: bool, message: str).
+    """
+    conn = get_db_connection()
+    if conn is None:
+        return False, "Database connection failed."
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM companies WHERE company_id = %s", (company_id,))
+        conn.commit()
+        return True, "Company deleted successfully!"
+    except Exception as e:
+        conn.rollback()
+        print(f"[DB ERROR] delete_company: {e}")
+        return False, "Failed to delete company."
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def toggle_company_status(company_id):
+    """
+    Flip a company's is_active flag (Active <-> Inactive).
+    Returns (success: bool, message: str).
+    """
+    conn = get_db_connection()
+    if conn is None:
+        return False, "Database connection failed."
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT is_active FROM companies WHERE company_id = %s", (company_id,))
+        row = cursor.fetchone()
+        if not row:
+            return False, "Company not found."
+
+        new_status = 0 if row["is_active"] else 1
+        cursor.execute(
+            "UPDATE companies SET is_active = %s WHERE company_id = %s",
+            (new_status, company_id)
+        )
+        conn.commit()
+        status_text = "activated" if new_status else "deactivated"
+        return True, f"Company {status_text} successfully!"
+    except Exception as e:
+        conn.rollback()
+        print(f"[DB ERROR] toggle_company_status: {e}")
+        return False, "Failed to update company status."
+    finally:
+        cursor.close()
+        conn.close()
