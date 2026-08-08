@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Application Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Application Details</h3>
+    <a href="{{ url_for('admin.applications') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Applications
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- ================= STUDENT INFO ================= -->
+    <div class="col-lg-6">
+        <div class="card p-4 h-100">
+            <h5 class="mb-3"><i class="bi bi-person-fill"></i> Student Information</h5>
+            <table class="table table-borderless mb-0">
+                <tr><th style="width: 40%;">Name</th><td>{{ application.full_name }}</td></tr>
+                <tr><th>Email</th><td>{{ application.email }}</td></tr>
+                <tr><th>Department</th><td>{{ application.department }}</td></tr>
+                <tr><th>Passing Year</th><td>{{ application.passing_year or "Not set" }}</td></tr>
+                <tr><th>CGPA</th><td>{{ application.cgpa }}</td></tr>
+                <tr><th>Backlogs</th><td>{{ application.backlogs }}</td></tr>
+                <tr>
+                    <th>Resume</th>
+                    <td>
+                        {% if application.resume_path %}
+                            <a href="{{ url_for('static', filename=application.resume_path) }}" target="_blank">
+                                <i class="bi bi-file-earmark-pdf"></i> View Resume
+                            </a>
+                        {% else %}
+                            <span class="text-muted">Not uploaded</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- ================= COMPANY + APPLICATION INFO ================= -->
+    <div class="col-lg-6">
+        <div class="card p-4 h-100">
+            <h5 class="mb-3"><i class="bi bi-building"></i> Company & Application Information</h5>
+            <table class="table table-borderless mb-3">
+                <tr><th style="width: 40%;">Company</th><td>{{ application.company_name }}</td></tr>
+                <tr><th>Job Role</th><td>{{ application.job_role }}</td></tr>
+                <tr><th>Package</th><td>{{ application.package_lpa }} LPA</td></tr>
+                <tr><th>Location</th><td>{{ application.location or "-" }}</td></tr>
+                <tr><th>Applied On</th><td>{{ application.applied_at }}</td></tr>
+                <tr>
+                    <th>Current Status</th>
+                    <td>
+                        {% if application.status == 'Applied' %}
+                            <span class="badge bg-primary">Applied</span>
+                        {% elif application.status == 'Shortlisted' %}
+                            <span class="badge bg-info text-dark">Shortlisted</span>
+                        {% elif application.status == 'Interview Scheduled' %}
+                            <span class="badge bg-warning text-dark">Interview Scheduled</span>
+                        {% elif application.status == 'Selected' %}
+                            <span class="badge bg-success">Selected</span>
+                        {% elif application.status == 'Rejected' %}
+                            <span class="badge bg-danger">Rejected</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+
+            {% if application.company_description %}
+            <p class="text-muted small">{{ application.company_description }}</p>
+            {% endif %}
+
+            <hr>
+            <h6>Update Status</h6>
+            <form method="POST"
+                  action="{{ url_for('admin.update_application_status_route', application_id=application.application_id) }}"
+                  class="d-flex gap-2">
+                <input type="hidden" name="return_to" value="details">
+                <select name="status" class="form-select">
+                    {% for s in statuses %}
+                    <option value="{{ s }}" {% if s == application.status %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

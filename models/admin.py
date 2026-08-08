@@ -314,3 +314,155 @@ def toggle_company_status(company_id):
     finally:
         cursor.close()
         conn.close()
+
+
+# ------------------------------------------------------------
+# APPLICATIONS MANAGEMENT (Step 8)
+# Reuses the existing `applications` table exactly as-is
+# (student_id, company_id, status, applied_at) - no schema
+# changes needed. Status values match the existing ENUM:
+# Applied, Shortlisted, Interview Scheduled, Rejected, Selected.
+# ------------------------------------------------------------
+
+# Valid statuses, in the exact casing the DB ENUM uses.
+# Defined once here so routes/admin.py and templates always
+# agree with the database on what's a legal status.
+APPLICATION_STATUSES = ["Applied", "Shortlisted", "Interview Scheduled", "Rejected", "Selected"]
+
+
+def get_all_companies_list():
+    """Lightweight list of (company_id, company_name) for the filter dropdown."""
+    conn = get_db_connection()
+    if conn is None:
+        return []
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT company_id, company_name FROM companies ORDER BY company_name ASC")
+    companies = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return companies
+
+
+def get_applications_paginated(search="", status="", company_id=None, page=1, per_page=10):
+    """
+    Return (applications, total_count) for the admin Applications page.
+      - search: matches student name/email or company name/job role
+      - status: exact match against the status ENUM (empty/'' = all)
+      - company_id: filter to one company (None = all)
+    All filters combine with AND, and all values are passed as
+    parameterized query arguments (never string-formatted into SQL).
+    """
+    conn = get_db_connection()
+    if conn is None:
+        return [], 0
+
+    cursor = conn.cursor(dictionary=True)
+
+    where_clauses = []
+    params = []
+
+    if search:
+        where_clauses.append(
+            "(s.full_name LIKE %s OR s.email LIKE %s OR c.company_name LIKE %s OR c.job_role LIKE %s)"
+        )
+        like_term = f"%{search}%"
+        params.extend([like_term, like_term, like_term, like_term])
+
+    if status and status in APPLICATION_STATUSES:
+        where_clauses.append("a.status = %s")
+        params.append(status)
+
+    if company_id:
+        where_clauses.append("c.company_id = %s")
+        params.append(company_id)
+
+    where_sql = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
+
+    base_from = """
+        FROM applications a
+        JOIN students s ON a.student_id = s.student_id
+        JOIN companies c ON a.company_id = c.company_id
+        {where_sql}
+    """.format(where_sql=where_sql)
+
+    # Total count for pagination
+    cursor.execute(f"SELECT COUNT(*) AS cnt {base_from}", params)
+    total_count = cursor.fetchone()["cnt"]
+
+    # Page of results
+    offset = (page - 1) * per_page
+    query = f"""
+        SELECT a.application_id, a.status, a.applied_at,
+               s.student_id, s.full_name, s.email, s.department, s.cgpa,
+               c.company_id, c.company_name, c.job_role, c.package_lpa
+        {base_from}
+        ORDER BY a.applied_at DESC
+        LIMIT %s OFFSET %s
+    """
+    cursor.execute(query, params + [per_page, offset])
+    applications = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return applications, total_count
+
+
+def get_application_by_id(application_id):
+    """
+    Full details for the 'View Application' page: student profile,
+    company/job info, and application status/date.
+    """
+    conn = get_db_connection()
+    if conn is None:
+        return None
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        """
+        SELECT a.application_id, a.status, a.applied_at,
+               s.student_id, s.full_name, s.email, s.department, s.passing_year,
+               s.cgpa, s.backlogs, s.resume_path,
+               c.company_id, c.company_name, c.job_role, c.package_lpa,
+               c.location, c.description AS company_description
+        FROM applications a
+        JOIN students s ON a.student_id = s.student_id
+        JOIN companies c ON a.company_id = c.company_id
+        WHERE a.application_id = %s
+        """,
+        (application_id,)
+    )
+    application = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return application
+
+
+def update_application_status(application_id, new_status):
+    """
+    Update the status of a single application.
+    Returns (success: bool, message: str).
+    """
+    if new_status not in APPLICATION_STATUSES:
+        return False, "Invalid status value."
+
+    conn = get_db_connection()
+    if conn is None:
+        return False, "Database connection failed."
+
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE applications SET status = %s WHERE application_id = %s",
+            (new_status, application_id)
+        )
+        if cursor.rowcount == 0:
+            conn.rollback()
+            return False, "Application not found."
+        conn.commit()
+        return True, f"Application status updated to '{new_status}'."
+    except Exception as e:
+        conn.rollback()
+        print(f"[DB ERROR] update_application_status: {e}")
+        return False, "Failed to update application status."
+    finally:
+        cursor.close()
+        conn.close()

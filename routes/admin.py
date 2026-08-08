@@ -27,6 +27,11 @@ from models.admin import (
     update_company,
     delete_company,
     toggle_company_status,
+    get_applications_paginated,
+    get_application_by_id,
+    update_application_status,
+    get_all_companies_list,
+    APPLICATION_STATUSES,
 )
 
 # Departments offered for the "Eligible Departments" checkboxes.
@@ -315,10 +320,80 @@ def drives():
     return render_template("admin/drives.html")
 
 
+# ------------------------------------------------------------
+# APPLICATIONS MANAGEMENT (Step 8)
+# ------------------------------------------------------------
 @admin_bp.route("/applications")
 @login_required
 def applications():
-    return render_template("admin/applications.html")
+    search = request.args.get("search", "").strip()
+    status = request.args.get("status", "").strip()
+    company_id = request.args.get("company_id", type=int)
+    page = request.args.get("page", 1, type=int)
+    if page < 1:
+        page = 1
+    per_page = 10
+
+    application_list, total_count = get_applications_paginated(
+        search=search, status=status, company_id=company_id, page=page, per_page=per_page
+    )
+    total_pages = max(1, (total_count + per_page - 1) // per_page)
+    company_options = get_all_companies_list()
+
+    return render_template(
+        "admin/applications.html",
+        applications=application_list,
+        statuses=APPLICATION_STATUSES,
+        company_options=company_options,
+        search=search,
+        status=status,
+        company_id=company_id,
+        page=page,
+        total_pages=total_pages,
+        total_count=total_count,
+    )
+
+
+@admin_bp.route("/applications/<int:application_id>")
+@login_required
+def view_application(application_id):
+    application = get_application_by_id(application_id)
+    if not application:
+        flash("Application not found.", "error")
+        return redirect(url_for("admin.applications"))
+
+    return render_template(
+        "admin/view_application.html",
+        application=application,
+        statuses=APPLICATION_STATUSES,
+    )
+
+
+@admin_bp.route("/applications/<int:application_id>/update-status", methods=["POST"])
+@login_required
+def update_application_status_route(application_id):
+    new_status = request.form.get("status", "").strip()
+
+    success, message = update_application_status(application_id, new_status)
+    flash(message, "success" if success else "error")
+
+    # Preserve whatever search/filter/page the admin was on, so
+    # updating a status doesn't reset their place in the list.
+    # These are passed as hidden fields in the status-update form.
+    redirect_args = {
+        "search": request.form.get("search", ""),
+        "status": request.form.get("filter_status", ""),
+        "page": request.form.get("page", 1),
+    }
+    company_id = request.form.get("company_id", "")
+    if company_id:
+        redirect_args["company_id"] = company_id
+
+    # If this update came from the details page, go back there instead.
+    if request.form.get("return_to") == "details":
+        return redirect(url_for("admin.view_application", application_id=application_id))
+
+    return redirect(url_for("admin.applications", **redirect_args))
 
 
 @admin_bp.route("/students")
